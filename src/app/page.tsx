@@ -118,6 +118,13 @@ export default function HomePage() {
             <span>{session?.user?.name}</span>
           </div>
           <button
+            onClick={() => window.open('/apifox/index.html', '_blank')}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+          >
+            <span role="img" aria-label="api">📖</span>
+            API文档
+          </button>
+          <button
             onClick={() => router.push("/apikey")}
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
@@ -129,7 +136,7 @@ export default function HomePage() {
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <FiLogOut className="w-4 h-4" />
-            退出
+            退出登录
           </button>
         </div>
       </div>
