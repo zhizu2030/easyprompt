@@ -79,9 +79,10 @@ const handler = NextAuth({
       }
       return token;
     },
-    async session({ session, token }): Promise<ExtendedSession> {
+    async session({ session, token }) {
+      // 强制断言 user 一定有 id 字段
       if (session.user) {
-        session.user.id = token.id as string;
+        (session.user as typeof session.user & { id?: string }).id = token.id as string;
       }
       return session;
     },
