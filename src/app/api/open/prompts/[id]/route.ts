@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const prompt = await prisma.prompt.findUnique({
-    where: { id: id },
+    where: { id },
     select: {
       id: true,
       title: true,
