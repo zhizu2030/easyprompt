@@ -24,11 +24,15 @@ export default function NewPromptPage() {
       setError("标题和内容不能为空");
       return;
     }
-    if (!session?.user || !(session.user as typeof session.user & { id?: string }).id) {
+    if (!session || !session.user) {
       setError("请先登录");
       return;
     }
-    const userId = (session.user as typeof session.user & { id?: string }).id;
+    const userId = (session.user as typeof session.user & { id?: string })?.id;
+    if (!userId) {
+      setError("请先登录");
+      return;
+    }
     const res = await fetch("/api/prompt", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
