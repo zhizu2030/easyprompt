@@ -191,7 +191,10 @@ export default function HomePage() {
                         ? "bg-blue-50 border-blue-200 shadow-sm"
                         : "hover:bg-gray-50 border-transparent"
                     } border`}
-                    onClick={() => setSelected(p)}
+                    onClick={() => {
+                      setSelected(p);
+                      setMode('view');
+                    }}
                   >
                     <div className="font-medium text-gray-900">{p.title}</div>
                     <div className="mt-1 text-sm text-gray-500 line-clamp-2">{p.content}</div>
