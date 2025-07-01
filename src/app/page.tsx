@@ -18,6 +18,7 @@ export default function HomePage() {
   const [editContent, setEditContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [mode, setMode] = useState<'view' | 'create'>("view");
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -147,7 +148,12 @@ export default function HomePage() {
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-lg font-bold text-gray-800">提示词列表</h2>
             <button
-              onClick={() => router.push("/prompt/new")}
+              onClick={() => {
+                setMode('create');
+                setSelected(null);
+                setEditTitle("");
+                setEditContent("");
+              }}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
             >
               <FiPlus className="w-4 h-4" />
@@ -196,9 +202,70 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 右侧详情 */}
+        {/* 右侧详情/新建区 */}
         <div className="flex-1 overflow-hidden flex flex-col bg-white">
-          {selected ? (
+          {mode === 'create' ? (
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="w-full text-xl font-bold px-2 py-1 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                  placeholder="请输入标题"
+                  aria-label="新建提示词标题"
+                />
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={async () => {
+                      if (!editTitle.trim() || !editContent.trim()) return;
+                      const res = await fetch("/api/prompt", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          title: editTitle,
+                          content: editContent,
+                          userId: session?.user?.email
+                        }),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setPrompts([data.prompt, ...prompts]);
+                        setSelected(data.prompt);
+                        setEditTitle("");
+                        setEditContent("");
+                        setMode('view');
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                  >
+                    <FiSave className="w-4 h-4" />
+                    保存
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMode('view');
+                      setEditTitle("");
+                      setEditContent("");
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    <FiX className="w-4 h-4" />
+                    取消
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 p-6 overflow-y-auto">
+                <textarea
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  className="w-full h-full p-4 text-gray-800 border rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                  placeholder="请输入提示词内容"
+                  aria-label="新建提示词内容"
+                />
+              </div>
+            </div>
+          ) : selected ? (
             <>
               <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex-1">

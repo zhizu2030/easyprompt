@@ -5,15 +5,16 @@ const prisma = new PrismaClient();
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { title, content } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ message: "缺少参数" }, { status: 400 });
   }
   try {
     const prompt = await prisma.prompt.update({
-      where: { id: params.id },
+      where: { id },
       data: { title, content },
     });
     return NextResponse.json({ prompt });
@@ -27,11 +28,12 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.prompt.delete({
-      where: { id: params.id },
+      where: { id },
     });
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {
