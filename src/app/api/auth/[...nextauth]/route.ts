@@ -68,6 +68,7 @@ const authOptions = {
     strategy: "jwt" as SessionStrategy,
     maxAge: 24 * 60 * 60, // 24小时
   },
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
     error: "/login", // 添加错误页面重定向
