@@ -52,12 +52,15 @@ export default function ApiKeyPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ remark }),
       });
-      if (!res.ok) throw new Error("创建失败");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || data.message || "创建失败");
+      }
       setRemark("");
       setSuccess("创建成功");
       fetchKeys();
-    } catch (e) {
-      setError("创建失败");
+    } catch (e: any) {
+      setError(e.message || "创建失败");
     }
     setLoading(false);
   };
