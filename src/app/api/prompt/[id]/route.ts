@@ -1,3 +1,5 @@
+/*
+// 已废弃：所有 prompt 操作请统一走 /api/open/prompts 路由
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -5,9 +7,9 @@ const prisma = new PrismaClient();
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
+  const { id } = params;
   const { title, content } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ message: "缺少参数" }, { status: 400 });
@@ -18,7 +20,11 @@ export async function PUT(
       data: { title, content },
     });
     return NextResponse.json({ prompt });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      // Prisma not found error
+      return NextResponse.json({ message: "Prompt 不存在" }, { status: 404 });
+    }
     return NextResponse.json(
       { message: "更新失败" },
       { status: 500 }
@@ -28,9 +34,9 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
+  const { id } = params;
   try {
     await prisma.prompt.delete({
       where: { id },
@@ -43,3 +49,4 @@ export async function DELETE(
     );
   }
 } 
+*/ 

@@ -72,4 +72,7 @@ model ApiKey {
   createdAt DateTime @default(now())
   expiresAt DateTime?
   enabled   Boolean  @default(true)
+  remark    String?
+  isAuto    Boolean  @default(false)
+  permissions String[] @default([])
 }

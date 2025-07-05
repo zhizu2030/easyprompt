@@ -8,29 +8,72 @@ info:
     包含 Prompt 列表、详情、创建等接口，支持 API Key 鉴权。
 servers:
   - url: https://yourdomain.com
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-apikey
+  schemas:
+    Prompt:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
 paths:
   /api/open/prompts:
-    get:
+    post:
       summary: 获取 Prompt 列表
-      description: 支持关键词搜索、分页。
-      parameters:
-        - in: query
-          name: q
-          schema:
-            type: string
-          description: 关键词，模糊搜索标题和内容
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-          description: 页码，默认1
-        - in: query
-          name: pageSize
-          schema:
-            type: integer
-            default: 20
-          description: 每页数量，默认20
+      description: |-
+        支持关键词搜索、分页。API Key 通过 header 传递。
+        
+        **请求 Header：**
+        | 参数名    | 类型   | 必填 | 说明         |
+        |-----------|--------|------|--------------|
+        | x-apikey  | string | 是   | API Key      |
+        
+        **请求 Body：**
+        | 参数名    | 类型    | 必填 | 说明                 |
+        |-----------|---------|------|----------------------|
+        | q         | string  | 否   | 关键词，模糊搜索标题和内容 |
+        | page      | integer | 否   | 页码，默认1           |
+        | pageSize  | integer | 否   | 每页数量，默认20       |
+        
+        **curl 示例：**
+        ```bash
+        curl -X POST https://yourdomain.com/api/open/prompts \
+          -H "Content-Type: application/json" \
+          -H "x-apikey: <你的apikey>" \
+          -d '{"q": "", "page": 1, "pageSize": 20}'
+        ```
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 关键词，模糊搜索标题和内容
+                page:
+                  type: integer
+                  default: 1
+                  description: 页码，默认1
+                pageSize:
+                  type: integer
+                  default: 20
+                  description: 每页数量，默认20
+            example:
+              q: ''
+              page: 1
+              pageSize: 20
       responses:
         '200':
           description: 成功响应
@@ -57,9 +100,38 @@ paths:
                   - id: cmciwwtcp0009kw2c1tscdeg
                     title: ChatGPT 快速入门
                     content: 如何高效使用ChatGPT...
+        '400':
+          description: 请求参数错误
+        '401':
+          description: 未授权
+        '500':
+          description: 服务器错误
+  /api/open/prompts/create:
     post:
-      summary: 新增 Prompt（需鉴权）
-      description: 需在 body 中传递 apikey 字段。
+      summary: 新增 Prompt
+      description: |-
+        API Key 通过 header 传递。
+        
+        **请求 Header：**
+        | 参数名    | 类型   | 必填 | 说明    |
+        |-----------|--------|------|---------|
+        | x-apikey  | string | 是   | API Key |
+        
+        **请求 Body：**
+        | 参数名    | 类型   | 必填 | 说明   |
+        |-----------|--------|------|--------|
+        | title     | string | 是   | 标题   |
+        | content   | string | 是   | 内容   |
+        
+        **curl 示例：**
+        ```bash
+        curl -X POST https://yourdomain.com/api/open/prompts/create \
+          -H "Content-Type: application/json" \
+          -H "x-apikey: <你的apikey>" \
+          -d '{"title": "ChatGPT 快速入门", "content": "如何高效使用ChatGPT..."}'
+        ```
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -69,7 +141,6 @@ paths:
               required:
                 - title
                 - content
-                - apikey
               properties:
                 title:
                   type: string
@@ -77,13 +148,9 @@ paths:
                 content:
                   type: string
                   description: 内容
-                apikey:
-                  type: string
-                  description: API Key
             example:
               title: ChatGPT 快速入门
               content: 如何高效使用ChatGPT...
-              apikey: your_api_key
       responses:
         '200':
           description: 创建成功
@@ -95,16 +162,51 @@ paths:
                 id: cmciwwtcp0009kw2c1tscdeg
                 title: ChatGPT 快速入门
                 content: 如何高效使用ChatGPT...
-  /api/open/prompts/{id}:
-    get:
+        '400':
+          description: 请求参数错误
+        '401':
+          description: 未授权
+        '500':
+          description: 服务器错误
+  /api/open/prompts/detail:
+    post:
       summary: 获取单个 Prompt 详情
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: Prompt ID
+      description: |-
+        API Key 通过 header 传递。
+        
+        **请求 Header：**
+        | 参数名    | 类型   | 必填 | 说明    |
+        |-----------|--------|------|---------|
+        | x-apikey  | string | 是   | API Key |
+        
+        **请求 Body：**
+        | 参数名    | 类型   | 必填 | 说明      |
+        |-----------|--------|------|-----------|
+        | id        | string | 是   | Prompt ID |
+        
+        **curl 示例：**
+        ```bash
+        curl -X POST https://yourdomain.com/api/open/prompts/detail \
+          -H "Content-Type: application/json" \
+          -H "x-apikey: <你的apikey>" \
+          -d '{"id": "cmciwwtcp0009kw2c1tscdeg"}'
+        ```
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  description: Prompt ID
+            example:
+              id: cmciwwtcp0009kw2c1tscdeg
       responses:
         '200':
           description: 成功响应
@@ -116,14 +218,102 @@ paths:
                 id: cmciwwtcp0009kw2c1tscdeg
                 title: ChatGPT 快速入门
                 content: 如何高效使用ChatGPT...
-components:
-  schemas:
-    Prompt:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
+        '400': { description: 请求参数错误 }
+        '401': { description: 未授权 }
+        '500': { description: 服务器错误 }
+  /api/open/prompts/edit:
+    post:
+      summary: 编辑 Prompt
+      description: |-
+        根据 id 编辑 Prompt，API Key 通过 header 传递。
+        
+        **请求 Header：**
+        | 参数名    | 类型   | 必填 | 说明    |
+        |-----------|--------|------|---------|
+        | x-apikey  | string | 是   | API Key |
+        
+        **请求 Body：**
+        | 参数名    | 类型   | 必填 | 说明      |
+        |-----------|--------|------|-----------|
+        | id        | string | 是   | Prompt ID |
+        | title     | string | 否   | 新标题    |
+        | content   | string | 否   | 新内容    |
+        
+        **curl 示例：**
+        ```bash
+        curl -X POST https://yourdomain.com/api/open/prompts/edit \
+          -H "Content-Type: application/json" \
+          -H "x-apikey: <你的apikey>" \
+          -d '{"id": "cmciwwtcp0009kw2c1tscdeg", "title": "新标题", "content": "新内容"}'
+        ```
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
         content:
-          type: string 
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  description: Prompt ID
+                title:
+                  type: string
+                  description: 新标题
+                content:
+                  type: string
+                  description: 新内容
+            example:
+              id: cmciwwtcp0009kw2c1tscdeg
+              title: 新标题
+              content: 新内容
+      responses:
+        '200':
+          description: 编辑成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+        '400': { description: 请求参数错误 }
+        '401': { description: 未授权 }
+        '403': { description: 无权限 }
+        '404': { description: Prompt 不存在 }
+        '500': { description: 服务器错误 }
+  /api/open/prompts/delete:
+    post:
+      summary: 删除 Prompt
+      description: 根据 id 删除 Prompt，API Key 通过 header 传递。
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  description: Prompt ID
+            example:
+              id: cmciwwtcp0009kw2c1tscdeg
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+              example:
+                success: true
+        '400': { description: 请求参数错误 }
+        '404': { description: Prompt 不存在 }
+        '500': { description: 服务器错误 }

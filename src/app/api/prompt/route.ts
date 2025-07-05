@@ -1,3 +1,5 @@
+/*
+// 已废弃：所有 prompt 操作请统一走 /api/open/prompts 路由
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -24,3 +26,4 @@ export async function POST(req: NextRequest) {
   const prompt = await prisma.prompt.create({ data: { title, content, userId } });
   return NextResponse.json({ prompt });
 } 
+*/ 

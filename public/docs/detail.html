@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>获取单个 Prompt 详情 - EasyPrompt API 文档</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+  <style>body { margin: 0; background: #f8f9fa; }</style>
+</head>
+<body>
+  <div style="padding:24px 32px 0 32px; background:#fff; box-shadow:0 2px 8px #0001;">
+    <h1 style="font-size:2rem;font-weight:bold;display:inline-block;">获取单个 Prompt 详情 [POST]</h1>
+    <a href="index.html" style="float:right;margin-top:18px;color:#1976d2;text-decoration:underline;">返回接口总览</a>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script>
+    async function loadSpec() {
+      const res = await fetch('openapi.yaml');
+      const text = await res.text();
+      let doc = text.trim().startsWith('{') ? JSON.parse(text) : window.jsyaml.load(text);
+      // 只保留 /api/open/prompts/detail
+      doc.paths = { '/api/open/prompts/detail': doc.paths['/api/open/prompts/detail'] };
+      return doc;
+    }
+    loadSpec().then(spec => {
+      SwaggerUIBundle({
+        spec,
+        dom_id: '#swagger-ui',
+        layout: 'BaseLayout',
+        docExpansion: 'full',
+        defaultModelsExpandDepth: -1,
+        supportedSubmitMethods: ['post'],
+        tryItOutEnabled: true,
+        displayRequestDuration: true,
+        persistAuthorization: true,
+      });
+    });
+  </script>
+</body>
+</html> 

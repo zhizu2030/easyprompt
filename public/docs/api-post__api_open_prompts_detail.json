@@ -1,0 +1,105 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Prompt Open API",
+    "version": "1.0.0",
+    "description": "EasyPrompt 平台开放 API 文档\n\n包含 Prompt 列表、详情、创建等接口，支持 API Key 鉴权。"
+  },
+  "servers": [
+    {
+      "url": "https://yourdomain.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-apikey"
+      }
+    },
+    "schemas": {
+      "Prompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/open/prompts/detail": {
+      "post": {
+        "summary": "获取单个 Prompt 详情",
+        "description": "需在 body 中传递 apikey 字段和 id。",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "apikey"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Prompt ID"
+                  },
+                  "apikey": {
+                    "type": "string",
+                    "description": "API Key"
+                  }
+                }
+              },
+              "example": {
+                "id": "cmciwwtcp0009kw2c1tscdeg",
+                "apikey": "your_api_key"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prompt"
+                },
+                "example": {
+                  "id": "cmciwwtcp0009kw2c1tscdeg",
+                  "title": "ChatGPT 快速入门",
+                  "content": "如何高效使用ChatGPT..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    }
+  }
+}

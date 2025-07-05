@@ -24,3 +24,60 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 飞书蓝风格 markdown 美化 */
+.wmde-markdown h1 {
+  color: #1a64d6;
+  font-weight: bold;
+  border-left: 4px solid #1a64d6;
+  padding-left: 8px;
+  margin-top: 1.5em;
+  margin-bottom: 0.7em;
+}
+.wmde-markdown h2 {
+  color: #1976d2;
+  font-weight: bold;
+  border-left: 3px solid #1976d2;
+  padding-left: 8px;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+}
+.wmde-markdown h3 {
+  color: #409eff;
+  font-weight: bold;
+  border-left: 2px solid #409eff;
+  padding-left: 8px;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.wmde-markdown h4 {
+  color: #5e6ad2;
+  font-weight: bold;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+.wmde-markdown strong {
+  color: #d32f2f;
+  font-weight: bold;
+}
+.wmde-markdown blockquote {
+  border-left: 4px solid #90caf9;
+  background: #f5f7fa;
+  color: #555;
+  padding: 8px 16px;
+  margin: 12px 0;
+  font-style: italic;
+}
+.wmde-markdown code, .wmde-markdown pre {
+  background: #f3f6fa;
+  color: #1565c0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 95%;
+}
+.wmde-markdown ul, .wmde-markdown ol {
+  margin-left: 1.5em;
+}
+.wmde-markdown li::marker {
+  color: #1a64d6;
+}

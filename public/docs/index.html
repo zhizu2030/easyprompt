@@ -1,32 +1,709 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>API 文档</title>
+  <title>EasyPrompt API 文档</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/themes/vue.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
   <style>
-    .sidebar { width: 320px; }
-    .markdown-section { max-width: 900px; margin: 0 auto; }
-    .markdown-section code { background: #f6f8fa; color: #c7254e; }
-    .markdown-section pre { background: #f6f8fa; }
-    .sidebar-nav { font-size: 16px; }
-    .app-name-link { font-size: 22px; font-weight: bold; }
+    body { margin: 0; background: #f8f9fa; }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      padding: 18px 32px 10px 32px;
+      background: #fff;
+      box-shadow: 0 2px 8px #0001;
+      z-index: 10;
+    }
+    .top-bar label { font-weight: bold; margin-right: 8px; }
+    .top-bar input {
+      width: 320px;
+      padding: 6px 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 12px;
+    }
+    .swagger-layout {
+      display: flex;
+      height: calc(100vh - 60px);
+      background: #f8f9fa;
+    }
+    .swagger-sidebar {
+      width: 320px;
+      background: #fff;
+      border-right: 1px solid #eee;
+      overflow-y: auto;
+      padding: 0 0 0 0;
+      box-shadow: 2px 0 8px #0001;
+      z-index: 2;
+    }
+    .swagger-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 32px 32px 32px;
+      background: #f8f9fa;
+    }
+    .sidebar-group {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+      margin: 24px 0 8px 24px;
+    }
+    .sidebar-api-list {
+      list-style: none;
+      padding: 0 0 0 16px;
+      margin: 0 0 0 0;
+    }
+    .sidebar-api-item {
+      padding: 6px 24px;
+      cursor: pointer;
+      color: #555;
+      border-left: 3px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+      font-size: 15px;
+    }
+    .sidebar-api-item.active {
+      background: #f0f6ff;
+      color: #1976d2;
+      border-left: 3px solid #1976d2;
+      font-weight: bold;
+    }
+    .sidebar-api-item:hover {
+      background: #f5f5f5;
+    }
+    /* 隐藏 Swagger UI 默认的顶部导航 */
+    .swagger-ui .topbar { display: none !important; }
+    .swagger-ui .auth-wrapper { display: none !important; }
+    /* 只隐藏 default 响应相关内容，恢复响应区块正常显示 */
+    .swagger-ui .opblock .response[data-code="default"],
+    .swagger-ui .opblock .tab[data-name="default"],
+    .swagger-ui .opblock .response-col_status[data-code="default"] {
+      display: none !important;
+    }
+    .swagger-ui .information-container + .servers,
+    .swagger-ui .opblock .servers,
+    .swagger-ui .servers {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      background: none !important;
+    }
+    @media (max-width: 900px) {
+      .swagger-layout { flex-direction: column; }
+      .swagger-sidebar { width: 100%; height: 220px; border-right: none; border-bottom: 1px solid #eee; }
+      .swagger-content { padding: 16px; }
+    }
   </style>
 </head>
 <body>
-  <div id="app"></div>
+  <div class="top-bar">
+    <label for="api-key-input">API Key：</label>
+    <input id="api-key-input" type="text" placeholder="your_api_key" autocomplete="off" />
+    <span style="color:#888;font-size:14px;">（可通过后台 API Key 管理页面跳转自动填充）</span>
+  </div>
+  <div class="swagger-layout">
+    <div class="swagger-sidebar" id="custom-sidebar">
+      <div id="sidebar-groups"></div>
+    </div>
+    <div class="swagger-content" id="swagger-content"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
   <script>
-    window.$docsify = {
-      name: 'API 文档',
-      repo: '',
-      coverpage: false,
-      auto2top: true,
-      subMaxLevel: 2,
-      search: 'auto'
+    // 获取 URL 参数，支持 hash 和 search
+    function getApiKeyFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      let key = params.get('api_key');
+      // 兼容 hash 跳转带参数
+      if (!key && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        key = hashParams.get('api_key');
+      }
+      return key || 'your_api_key';
     }
+    // 记录 summary+method 到 DOM id 的映射
+    let summaryMethodToId = {};
+
+    // 扫描右侧接口详情，建立映射
+    function buildIdMap() {
+      summaryMethodToId = {};
+      const opblocks = document.querySelectorAll('[id^="operations-"]');
+      opblocks.forEach(block => {
+        // 获取 summary 文本和 method
+        const summaryEl = block.querySelector('.opblock-summary-description');
+        const methodEl = block.querySelector('.opblock-summary-method');
+        if (summaryEl && methodEl) {
+          const summary = summaryEl.textContent.trim();
+          const method = methodEl.textContent.trim().toUpperCase();
+          summaryMethodToId[`${summary}__${method}`] = block.id;
+        }
+      });
+    }
+
+    let apiList = [];
+    let currentApiKey = getApiKeyFromUrl() || 'your_api_key';
+    let ui = null;
+
+    // 加载所有接口列表（只做一次）
+    async function loadApiList() {
+      if (apiList.length) return apiList;
+      let res = await fetch('openapi.yaml');
+      let text = await res.text();
+      let doc = text.trim().startsWith('{') ? JSON.parse(text) : window.jsyaml.load(text);
+      const paths = doc.paths || {};
+      apiList = [];
+      Object.entries(paths).forEach(([path, ops]) => {
+        Object.entries(ops).forEach(([method, op]) => {
+          apiList.push({
+            path,
+            method: method.toUpperCase(),
+            summary: op.summary || path,
+            operationId: op.operationId || `${method}_${path}`.replace(/[^a-zA-Z0-9_]/g, '_'),
+          });
+        });
+      });
+      return apiList;
+    }
+
+    // 渲染单接口 Swagger UI
+    async function renderSingleApi(operationId) {
+      const res = await fetch(`api-${operationId}.json`);
+      const spec = await res.json();
+      // 获取接口 summary/description
+      let summary = '', description = '';
+      const path = Object.keys(spec.paths)[0];
+      const method = Object.keys(spec.paths[path])[0];
+      const op = spec.paths[path][method];
+      summary = op.summary || '';
+      description = op.description || '';
+      // 顶部自定义区域
+      const content = document.getElementById('swagger-content');
+      content.innerHTML = '';
+      const top = document.createElement('div');
+      top.id = 'api-doc-top';
+      top.style.padding = '0 0 24px 0';
+      // summary
+      const h1 = document.createElement('h1');
+      h1.textContent = summary;
+      h1.style.fontSize = '2rem';
+      h1.style.fontWeight = 'bold';
+      h1.style.margin = '32px 0 0 0';
+      top.appendChild(h1);
+      // description
+      if (description) {
+        const desc = document.createElement('div');
+        desc.textContent = description;
+        desc.style.margin = '12px 0 0 0';
+        desc.style.fontSize = '1.1rem';
+        desc.style.color = '#444';
+        top.appendChild(desc);
+      }
+      content.appendChild(top);
+      // 渲染 Swagger UI（隐藏 info 区域）
+      const div = document.createElement('div');
+      div.id = 'swagger-ui-single';
+      content.appendChild(div);
+      // 彻底移除 servers 字段，防止 Swagger UI 渲染 servers 区域
+      delete spec.servers;
+      SwaggerUIBundle({
+        spec,
+        dom_id: '#swagger-ui-single',
+        presets: [SwaggerUIBundle.presets.apis],
+        plugins: [AutoApiKeyPlugin],
+        layout: 'BaseLayout',
+        requestInterceptor: req => {
+          // 只加 header，不加 body
+          req.headers['x-apikey'] = currentApiKey;
+          // 移除 body 里的 apikey 字段
+          if (req.body) {
+            try {
+              const bodyObj = JSON.parse(req.body);
+              if ('apikey' in bodyObj) {
+                delete bodyObj.apikey;
+                req.body = JSON.stringify(bodyObj);
+              }
+            } catch {}
+          }
+          return req;
+        },
+        docExpansion: 'full',
+        defaultModelsExpandDepth: -1,
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+        tryItOutEnabled: true,
+        displayRequestDuration: true,
+        persistAuthorization: true,
+        onComplete: function() {
+          setTimeout(() => {
+            setServerUrl();
+            setupApiKeySync();
+            // 隐藏 Swagger UI info 区域
+            const info = document.querySelector('.swagger-ui .information-container');
+            if (info) info.style.display = 'none';
+            // 自动滚动到接口文档顶部
+            const topEl = document.getElementById('api-doc-top');
+            if (topEl) topEl.scrollIntoView({ behavior: 'auto', block: 'start' });
+            // 移除所有 default 相关 DOM（标题、内容、折叠块、tab等）
+            document.querySelectorAll('.response[data-code="default"]').forEach(el => el.remove());
+            document.querySelectorAll('.opblock-section-header').forEach(el => {
+              if (el.textContent.trim().toLowerCase() === 'default') el.remove();
+            });
+            document.querySelectorAll('.tab[data-name="default"]').forEach(el => el.remove());
+            // 递归查找所有内容为 default 的块
+            document.querySelectorAll('*').forEach(el => {
+              if (el.textContent && el.textContent.trim().toLowerCase() === 'default') {
+                el.style.display = 'none';
+              }
+            });
+            // 插入"复制接口地址"按钮
+            const opblockSummary = document.querySelector('.opblock-summary');
+            if (opblockSummary) {
+              // 获取 path
+              const fullUrl = window.location.origin + path;
+              // 创建按钮
+              const copyApiBtn = document.createElement('button');
+              copyApiBtn.textContent = '复制接口地址';
+              copyApiBtn.style.marginLeft = '16px';
+              copyApiBtn.style.padding = '2px 10px';
+              copyApiBtn.style.fontSize = '14px';
+              copyApiBtn.style.border = '1px solid #1976d2';
+              copyApiBtn.style.background = '#fff';
+              copyApiBtn.style.color = '#1976d2';
+              copyApiBtn.style.borderRadius = '4px';
+              copyApiBtn.style.cursor = 'pointer';
+              copyApiBtn.onmouseenter = () => {
+                // 悬浮展示完整地址
+                let tip = document.createElement('div');
+                tip.textContent = fullUrl;
+                tip.style.position = 'absolute';
+                tip.style.left = '0';
+                tip.style.top = '32px';
+                tip.style.background = '#222';
+                tip.style.color = '#fff';
+                tip.style.padding = '4px 12px';
+                tip.style.borderRadius = '6px';
+                tip.style.fontSize = '13px';
+                tip.style.zIndex = '99';
+                tip.id = 'copy-api-tip';
+                copyApiBtn.appendChild(tip);
+              };
+              copyApiBtn.onmouseleave = () => {
+                const tip = document.getElementById('copy-api-tip');
+                if (tip) tip.remove();
+              };
+              copyApiBtn.onclick = () => {
+                navigator.clipboard.writeText(fullUrl);
+                copyApiBtn.textContent = '已复制';
+                setTimeout(() => { copyApiBtn.textContent = '复制接口地址'; }, 1200);
+              };
+              opblockSummary.appendChild(copyApiBtn);
+            }
+            // MutationObserver 彻底移除所有 servers 区域
+            if (content) {
+              const removeServers = () => {
+                content.querySelectorAll('.servers').forEach(el => {
+                  let node = el;
+                  while (node && node.parentElement && !node.classList.contains('swagger-content')) {
+                    if (node.parentElement.childElementCount === 1) {
+                      node = node.parentElement;
+                    } else {
+                      break;
+                    }
+                  }
+                  if (node && !node.classList.contains('swagger-content')) {
+                    node.remove();
+                  } else {
+                    el.remove();
+                  }
+                });
+              };
+              // 立即执行一次
+              removeServers();
+              // 监听后续 DOM 变化
+              const observer = new MutationObserver(removeServers);
+              observer.observe(content, { childList: true, subtree: true });
+            }
+            // 彻底移除 .auth-wrapper 区域，防止 Authorize 按钮及其空白残留
+            document.querySelectorAll('.swagger-ui .auth-wrapper').forEach(el => {
+              let node = el;
+              while (node && node.parentElement && !node.classList.contains('swagger-content')) {
+                if (node.parentElement.childElementCount === 1) {
+                  node = node.parentElement;
+                } else {
+                  break;
+                }
+              }
+              if (node && !node.classList.contains('swagger-content')) {
+                node.remove();
+              } else {
+                el.remove();
+              }
+            });
+            autoResizeRequestBodyTextarea();
+            syncApiKeyInCurl();
+            syncApiKeyInEditValue();
+            document.getElementById('api-key-input')?.addEventListener('input', syncApiKeyInCurl);
+            document.getElementById('api-key-input')?.addEventListener('input', syncApiKeyInEditValue);
+            const curlObserver = new MutationObserver(syncApiKeyInCurl);
+            curlObserver.observe(document.getElementById('swagger-content'), { childList: true, subtree: true });
+            const editValueObserver = new MutationObserver(syncApiKeyInEditValue);
+            editValueObserver.observe(document.getElementById('swagger-content'), { childList: true, subtree: true });
+          }, 300);
+        }
+      });
+    }
+
+    // 渲染全部接口（API说明）
+    async function renderAllApis() {
+      let res = await fetch('openapi.yaml');
+      let text = await res.text();
+      let spec = text.trim().startsWith('{') ? JSON.parse(text) : window.jsyaml.load(text);
+      // 自动替换 servers 字段为本地地址
+      if (spec.servers && spec.servers.length > 0) {
+        spec.servers[0].url = window.location.origin;
+      }
+      // 只保留 info、servers
+      const content = document.getElementById('swagger-content');
+      content.innerHTML = '';
+      // 标题
+      const title = document.createElement('h1');
+      title.style.fontSize = '2.6rem';
+      title.style.fontWeight = 'bold';
+      title.style.margin = '32px 0 0 0';
+      title.textContent = spec.info?.title || 'API 文档';
+      content.appendChild(title);
+      // 版本+OAS
+      const ver = document.createElement('span');
+      ver.textContent = spec.info?.version ? spec.info.version : '';
+      ver.style.display = 'inline-block';
+      ver.style.margin = '0 12px 0 16px';
+      ver.style.background = '#f0f1f3';
+      ver.style.color = '#555';
+      ver.style.fontWeight = 'bold';
+      ver.style.fontSize = '1.1rem';
+      ver.style.padding = '2px 12px';
+      ver.style.borderRadius = '12px';
+      if (spec.info?.version) title.appendChild(ver);
+      const oas = document.createElement('span');
+      oas.textContent = spec.openapi ? `OAS ${spec.openapi.split('.')[0]}` : '';
+      oas.style.display = 'inline-block';
+      oas.style.margin = '0 0 0 8px';
+      oas.style.background = '#b6f2b6';
+      oas.style.color = '#2e7d32';
+      oas.style.fontWeight = 'bold';
+      oas.style.fontSize = '1.1rem';
+      oas.style.padding = '2px 12px';
+      oas.style.borderRadius = '12px';
+      if (spec.openapi) title.appendChild(oas);
+      // 描述
+      if (spec.info?.description) {
+        const desc = document.createElement('div');
+        desc.textContent = spec.info.description;
+        desc.style.margin = '18px 0 0 0';
+        desc.style.fontSize = '1.2rem';
+        desc.style.color = '#444';
+        content.appendChild(desc);
+      }
+      // Servers 区域（仅说明页显示）
+      if (spec.servers && spec.servers.length > 0) {
+        content.appendChild(renderServerArea(spec.servers[0].url));
+      }
+    }
+
+    // 构建左侧导航，点击时只渲染单接口
+    async function buildSidebar() {
+      const apis = await loadApiList();
+      const sidebarGroups = document.getElementById('sidebar-groups');
+      sidebarGroups.innerHTML = '';
+      const ul = document.createElement('ul');
+      ul.className = 'sidebar-api-item';
+      // API说明
+      const docIntro = document.createElement('li');
+      docIntro.className = 'sidebar-api-item';
+      docIntro.textContent = 'API说明';
+      docIntro.style.cursor = 'pointer';
+      docIntro.onclick = () => {
+        renderAllApis();
+        document.querySelectorAll('.sidebar-api-item').forEach(item => item.classList.remove('active'));
+        docIntro.classList.add('active');
+      };
+      ul.appendChild(docIntro);
+      // 接口列表
+      apis.forEach(api => {
+        const li = document.createElement('li');
+        li.className = 'sidebar-api-item';
+        li.textContent = `${api.summary} [${api.method}]`;
+        li.dataset.operationId = api.operationId;
+        li.onclick = () => {
+          renderSingleApi(api.operationId);
+          document.querySelectorAll('.sidebar-api-item').forEach(item => item.classList.remove('active'));
+          li.classList.add('active');
+        };
+        ul.appendChild(li);
+      });
+      sidebarGroups.appendChild(ul);
+    }
+
+    // 加载 Swagger UI
+    function updateApiKey(newKey) {
+      currentApiKey = newKey || 'your_api_key';
+    }
+
+    // 插件：自动同步 apikey 到请求体
+    const AutoApiKeyPlugin = function() {
+      return {
+        statePlugins: {
+          spec: {
+            wrapSelectors: {
+              requestBodyValue: (oriSelector, system) => (path, method) => {
+                const val = oriSelector(path, method);
+                if (val && typeof val === 'object' && 'apikey' in val) {
+                  const apiKey = document.getElementById('api-key-input')?.value || 'your_api_key';
+                  return { ...val, apikey: apiKey };
+                }
+                return val;
+              }
+            }
+          }
+        }
+      };
+    };
+
+    // 初始化输入框
+    const apiKeyInput = document.getElementById('api-key-input');
+    function fillApiKeyFromUrl() {
+      const urlKey = getApiKeyFromUrl();
+      if (urlKey && apiKeyInput.value !== urlKey) {
+        apiKeyInput.value = urlKey;
+        updateApiKey(urlKey);
+      }
+    }
+    fillApiKeyFromUrl();
+    // 监听URL变化自动填充
+    window.addEventListener('popstate', fillApiKeyFromUrl);
+    window.addEventListener('hashchange', fillApiKeyFromUrl);
+    // 监听输入框变化，更新 apikey
+    apiKeyInput.addEventListener('input', function() {
+      updateApiKey(apiKeyInput.value);
+    });
+    // 首次渲染 Swagger UI
+    renderAllApis();
+    buildSidebar();
+
+    // 在 Swagger UI 渲染完成后，移除 Server 下拉框，只展示本地服务地址和复制按钮
+    function setServerUrl() {
+      // 移除原有下拉框
+      const serverWrap = document.querySelector('.servers');
+      if (serverWrap) {
+        serverWrap.innerHTML = '';
+        // 新建只读 input 展示本地地址
+        const localUrl = window.location.origin;
+        const input = document.createElement('input');
+        input.value = localUrl;
+        input.readOnly = true;
+        input.style.width = '320px';
+        input.style.padding = '6px 10px';
+        input.style.fontSize = '16px';
+        input.style.border = '1px solid #ddd';
+        input.style.borderRadius = '4px';
+        input.style.marginRight = '12px';
+        input.style.background = '#f8f9fa';
+        serverWrap.appendChild(input);
+        // 一键复制按钮
+        let copyBtn = document.getElementById('server-copy-btn');
+        if (!copyBtn) {
+          copyBtn = document.createElement('button');
+          copyBtn.id = 'server-copy-btn';
+          copyBtn.textContent = '复制';
+          copyBtn.style.marginLeft = '8px';
+          copyBtn.style.padding = '2px 10px';
+          copyBtn.style.fontSize = '14px';
+          copyBtn.style.border = '1px solid #1976d2';
+          copyBtn.style.background = '#fff';
+          copyBtn.style.color = '#1976d2';
+          copyBtn.style.borderRadius = '4px';
+          copyBtn.style.cursor = 'pointer';
+          copyBtn.onmouseenter = () => copyBtn.style.background = '#f0f6ff';
+          copyBtn.onmouseleave = () => copyBtn.style.background = '#fff';
+          copyBtn.onclick = () => {
+            navigator.clipboard.writeText(localUrl);
+            copyBtn.textContent = '已复制';
+            setTimeout(() => { copyBtn.textContent = '复制'; }, 1200);
+          };
+          serverWrap.appendChild(copyBtn);
+        }
+      }
+    }
+
+    // 动态同步 curl 示例中的 apikey 字段
+    function syncApiKeyInCurl() {
+      const apiKey = document.getElementById('api-key-input')?.value || 'your_api_key';
+      document.querySelectorAll('code, pre').forEach(block => {
+        if (block.textContent && block.textContent.includes('apikey')) {
+          // 只处理 curl 代码块
+          if (block.textContent.includes('curl') && block.textContent.includes('your_api_key')) {
+            block.textContent = block.textContent.replace(/("apikey":\s*")your_api_key("|,)/g, `$1${apiKey}$2`)
+              .replace(/(-H 'x-apikey: )your_api_key(')/g, `$1${apiKey}$2`)
+              .replace(/("apikey":\s*")([\w-]+)("|,)/g, function(match, p1, p2, p3) {
+                // 只替换 apikey 字段
+                return `${p1}${apiKey}${p3}`;
+              });
+          }
+        }
+      });
+    }
+
+    // 动态同步 Edit Value Schema 区域的 apikey 字段
+    function syncApiKeyInEditValue() {
+      const apiKey = document.getElementById('api-key-input')?.value || 'your_api_key';
+      // textarea 区域
+      document.querySelectorAll('.opblock-body textarea, .body-param__text').forEach(area => {
+        let val = area.value || area.textContent || '';
+        if (val.includes('"apikey"')) {
+          try {
+            const obj = JSON.parse(val);
+            if (obj && typeof obj === 'object' && ('apikey' in obj)) {
+              if (obj.apikey !== apiKey) {
+                obj.apikey = apiKey;
+                const newVal = JSON.stringify(obj, null, 2);
+                area.value = newVal;
+                area.textContent = newVal;
+                setTimeout(() => {
+                  area.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+                  area.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                  area.blur(); area.focus();
+                }, 0);
+              }
+            }
+          } catch {}
+        }
+      });
+      // pre/code 区域
+      document.querySelectorAll('.opblock-body pre, .opblock-body code, .microlight').forEach(pre => {
+        let text = pre.innerText || pre.textContent || '';
+        if (text.includes('"apikey"')) {
+          try {
+            const obj = JSON.parse(text);
+            if (obj && typeof obj === 'object' && 'apikey' in obj) {
+              if (obj.apikey !== apiKey) {
+                obj.apikey = apiKey;
+                const newText = JSON.stringify(obj, null, 2);
+                if (pre.tagName === 'CODE' || pre.tagName === 'PRE') {
+                  pre.innerText = newText;
+                } else {
+                  pre.textContent = newText;
+                }
+              }
+            }
+          } catch {}
+        }
+      });
+    }
+
+    // 页面初次渲染和 apikey 变化时都同步
+    function setupApiKeySync() {
+      syncApiKeyInCurl();
+      syncApiKeyInEditValue();
+      document.getElementById('api-key-input')?.addEventListener('input', syncApiKeyInCurl);
+      document.getElementById('api-key-input')?.addEventListener('input', syncApiKeyInEditValue);
+      const curlObserver = new MutationObserver(syncApiKeyInCurl);
+      curlObserver.observe(document.getElementById('swagger-content'), { childList: true, subtree: true });
+      const editValueObserver = new MutationObserver(syncApiKeyInEditValue);
+      editValueObserver.observe(document.getElementById('swagger-content'), { childList: true, subtree: true });
+    }
+
+    // renderServerArea 用于 API说明页，直接展开显示域名地址和复制按钮
+    function renderServerArea(serverUrl) {
+      const serverWrap = document.createElement('div');
+      serverWrap.style.margin = '32px 0 0 0';
+      serverWrap.style.padding = '24px';
+      serverWrap.style.background = '#fff';
+      serverWrap.style.borderRadius = '8px';
+      serverWrap.style.boxShadow = '0 2px 8px #0001';
+      serverWrap.style.display = 'flex';
+      serverWrap.style.alignItems = 'center';
+      // label
+      const label = document.createElement('div');
+      label.textContent = 'Service';
+      label.style.fontWeight = 'bold';
+      label.style.fontSize = '1.1rem';
+      label.style.marginRight = '16px';
+      label.style.color = '#888';
+      serverWrap.appendChild(label);
+      // 域名地址 input
+      const input = document.createElement('input');
+      input.value = serverUrl;
+      input.readOnly = true;
+      input.style.width = '320px';
+      input.style.padding = '6px 10px';
+      input.style.fontSize = '16px';
+      input.style.border = '1px solid #ddd';
+      input.style.borderRadius = '4px';
+      input.style.background = '#f8f9fa';
+      input.style.marginRight = '12px';
+      serverWrap.appendChild(input);
+      // 复制按钮
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = '复制';
+      copyBtn.style.marginLeft = '8px';
+      copyBtn.style.padding = '2px 10px';
+      copyBtn.style.fontSize = '14px';
+      copyBtn.style.border = '1px solid #1976d2';
+      copyBtn.style.background = '#fff';
+      copyBtn.style.color = '#1976d2';
+      copyBtn.style.borderRadius = '4px';
+      copyBtn.style.cursor = 'pointer';
+      copyBtn.onmouseenter = () => copyBtn.style.background = '#f0f6ff';
+      copyBtn.onmouseleave = () => copyBtn.style.background = '#fff';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(serverUrl);
+        copyBtn.textContent = '已复制';
+        setTimeout(() => { copyBtn.textContent = '复制'; }, 1200);
+      };
+      serverWrap.appendChild(copyBtn);
+      return serverWrap;
+    }
+
+    // 自适应 Request body textarea 高度
+    function autoResizeRequestBodyTextarea() {
+      document.querySelectorAll('.opblock-body textarea').forEach(area => {
+        area.style.overflowY = 'auto';
+        area.style.maxHeight = '320px';
+        area.style.minHeight = '36px';
+        area.style.height = 'auto';
+        // 先重置再自适应
+        area.style.height = 'auto';
+        area.style.height = Math.min(area.scrollHeight, 320) + 'px';
+        area.addEventListener('input', function() {
+          area.style.height = 'auto';
+          area.style.height = Math.min(area.scrollHeight, 320) + 'px';
+        });
+      });
+    }
+
+    // --- 自动填充 apikey ---
+    window.addEventListener('DOMContentLoaded', function () {
+      let apiKey = localStorage.getItem('easyprompt_auto_apikey');
+      const input = document.getElementById('api-key-input');
+      if (apiKey && input) {
+        input.value = apiKey;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (input) {
+        fetch('/api/apikey/auto', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.key) {
+              input.value = data.key;
+              localStorage.setItem('easyprompt_auto_apikey', data.key);
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          });
+      }
+    });
   </script>
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
 </body>
 </html> 

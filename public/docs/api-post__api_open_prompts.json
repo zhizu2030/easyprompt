@@ -1,0 +1,140 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Prompt Open API",
+    "version": "1.0.0",
+    "description": "EasyPrompt 平台开放 API 文档\n\n包含 Prompt 列表、详情、创建等接口，支持 API Key 鉴权。"
+  },
+  "servers": [
+    {
+      "url": "https://yourdomain.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-apikey"
+      }
+    },
+    "schemas": {
+      "Prompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/open/prompts": {
+      "post": {
+        "summary": "获取 Prompt 列表",
+        "description": "支持关键词搜索、分页。需在 body 中传递 apikey 字段。",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "apikey"
+                ],
+                "properties": {
+                  "apikey": {
+                    "type": "string",
+                    "description": "API Key"
+                  },
+                  "q": {
+                    "type": "string",
+                    "description": "关键词，模糊搜索标题和内容"
+                  },
+                  "page": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "页码，默认1"
+                  },
+                  "pageSize": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "每页数量，默认20"
+                  }
+                }
+              },
+              "example": {
+                "apikey": "your_api_key",
+                "q": "",
+                "page": 1,
+                "pageSize": 20
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "prompts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Prompt"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "total": 2,
+                  "page": 1,
+                  "pageSize": 10,
+                  "prompts": [
+                    {
+                      "id": "cmciwwtcp0009kw2c1tscdeg",
+                      "title": "ChatGPT 快速入门",
+                      "content": "如何高效使用ChatGPT..."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    }
+  }
+}
