@@ -4,7 +4,7 @@ import { requireApiKey } from "@/lib/requireApiKey";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   const check = await requireApiKey(request);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
@@ -25,7 +25,7 @@ export async function GET(
   return NextResponse.json(prompt);
 }
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: any) {
   const check = await requireApiKey(req);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
   const id = context.params.id;
@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
   const check = await requireApiKey(req);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
   const id = context.params.id;
