@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { SessionStrategy, Session, User } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import { nanoid } from "nanoid";
+import bcrypt from "bcrypt";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -22,7 +23,8 @@ export const authOptions = {
           where: { name: credentials.username }
         });
         if (!user) throw new Error("用户不存在");
-        if (user.password !== credentials.password) throw new Error("密码错误");
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) throw new Error("密码错误");
         return { id: user.id, name: user.name, email: user.email };
       }
     })

@@ -108,28 +108,28 @@ export default function ApiKeyPage() {
   return (
     <>
       <GlobalNav />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100">
-        <div className="flex flex-col items-center mb-8">
-          <img src="/window.svg" alt="logo" className="w-16 h-16 mb-2" />
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-800 mb-1">API Key 管理</h1>
-          <p className="text-gray-500 text-sm">在这里你可以管理你的 API Key，用于开放接口调用。</p>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100">
+      <div className="flex flex-col items-center mb-8">
+        <img src="/window.svg" alt="logo" className="w-16 h-16 mb-2" />
+        <h1 className="text-3xl font-extrabold tracking-tight text-gray-800 mb-1">API Key 管理</h1>
+        <p className="text-gray-500 text-sm">在这里你可以管理你的 API Key，用于开放接口调用。</p>
+      </div>
         <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-gray-100 p-12">
           <div className="mb-6 flex gap-4 items-center">
             <div className="flex flex-col" style={{ minWidth: 240 }}>
               <label className="mb-1 text-base font-medium">
                 <span className="text-red-500 mr-1">*</span>备注
               </label>
-              <input
+          <input
                 className="border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 w-full"
                 placeholder="请输入备注（必填）"
-                value={remark}
+            value={remark}
                 onChange={e => {
                   setRemark(e.target.value);
                   if (e.target.value.trim()) setRemarkError("");
                 }}
-                disabled={loading}
-              />
+            disabled={loading}
+          />
               {remarkError && <span className="text-red-500 text-xs mt-1">{remarkError}</span>}
             </div>
             <div className="flex flex-col" style={{ minWidth: 240 }}>
@@ -157,34 +157,34 @@ export default function ApiKeyPage() {
                 placeholder="到期时间（可选）"
               />
             </div>
-            <button
+          <button
               className="h-12 px-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors self-center text-base font-medium"
-              onClick={createKey}
-              disabled={loading}
+            onClick={createKey}
+            disabled={loading}
               style={{ marginTop: 24 }}
-            >新建 API Key</button>
-          </div>
-          {error && <div className="text-red-500 text-center mb-2">{error}</div>}
-          {success && <div className="text-green-600 text-center mb-2">{success}</div>}
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-gray-500 border-b">
-                  <th className="py-2 px-2">Key</th>
-                  <th className="py-2 px-2">备注</th>
+          >新建 API Key</button>
+        </div>
+        {error && <div className="text-red-500 text-center mb-2">{error}</div>}
+        {success && <div className="text-green-600 text-center mb-2">{success}</div>}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-gray-500 border-b">
+                <th className="py-2 px-2">Key</th>
+                <th className="py-2 px-2">备注</th>
                   <th className="py-2 px-2">到期时间</th>
-                  <th className="py-2 px-2">创建时间</th>
-                  <th className="py-2 px-2">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+                <th className="py-2 px-2">创建时间</th>
+                <th className="py-2 px-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                   <tr><td colSpan={5} className="text-center py-8">加载中...</td></tr>
                 ) : Array.isArray(displayKeys) && displayKeys.length === 0 ? (
                   <tr><td colSpan={5} className="text-center py-8 text-gray-400">暂无 API Key</td></tr>
                 ) : Array.isArray(displayKeys) ? (
                   displayKeys.map(k => (
-                    <tr key={k.id} className="border-b hover:bg-gray-50">
+                  <tr key={k.id} className="border-b hover:bg-gray-50">
                       <td className="py-2 px-2 font-mono select-all">
                         {k.key.slice(0, 8) + "..." + k.key.slice(-4)}
                         <button
@@ -200,28 +200,28 @@ export default function ApiKeyPage() {
                           <span className="ml-2 text-green-500 text-xs">已复制</span>
                         )}
                       </td>
-                      <td className="py-2 px-2">{k.remark || "-"}</td>
+                    <td className="py-2 px-2">{k.remark || "-"}</td>
                       <td className="py-2 px-2">{k.expiresAt ? new Date(k.expiresAt).toLocaleString() : "永久有效"}</td>
-                      <td className="py-2 px-2">{new Date(k.createdAt).toLocaleString()}</td>
-                      <td className="py-2 px-2">
-                        <button
-                          className="text-red-500 hover:underline text-xs"
-                          onClick={() => deleteKey(k.id)}
-                          disabled={loading}
-                        >删除</button>
-                      </td>
-                    </tr>
-                  ))
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                    <td className="py-2 px-2">{new Date(k.createdAt).toLocaleString()}</td>
+                    <td className="py-2 px-2">
+                      <button
+                        className="text-red-500 hover:underline text-xs"
+                        onClick={() => deleteKey(k.id)}
+                        disabled={loading}
+                      >删除</button>
+                    </td>
+                  </tr>
+                ))
+              ) : null}
+            </tbody>
+          </table>
         </div>
-        <button
-          className="mt-8 text-blue-600 hover:underline cursor-pointer bg-transparent border-none outline-none"
-          onClick={() => router.push("/")}
-        >返回首页</button>
       </div>
+      <button
+        className="mt-8 text-blue-600 hover:underline cursor-pointer bg-transparent border-none outline-none"
+        onClick={() => router.push("/")}
+      >返回首页</button>
+    </div>
     </>
   );
 } 

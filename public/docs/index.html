@@ -124,6 +124,10 @@
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
         key = hashParams.get('api_key');
       }
+      // 新增：如果 URL 没有，则查 localStorage
+      if (!key) {
+        key = localStorage.getItem('easyprompt_auto_apikey');
+      }
       return key || 'your_api_key';
     }
     // 记录 summary+method 到 DOM id 的映射

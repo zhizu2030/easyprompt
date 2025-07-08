@@ -6,9 +6,37 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendMsg, setSendMsg] = useState("");
   const router = useRouter();
+
+  const isValidEmail = (email: string) => {
+    return /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email);
+  };
+
+  const handleSendCode = async () => {
+    setSendMsg("");
+    setSending(true);
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setSendMsg("验证码已发送，请查收邮箱");
+      } else {
+        const data = await res.json();
+        setSendMsg(data.error || "发送失败");
+      }
+    } catch {
+      setSendMsg("发送失败");
+    }
+    setSending(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +45,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, code }),
     });
     if (res.ok) {
       setSuccess("注册成功，请登录");
@@ -50,6 +78,23 @@ export default function RegisterPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
+        <div className="flex gap-2 items-center">
+          <input
+            className="flex-1 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 p-3 rounded-xl outline-none transition-all text-base"
+            placeholder="验证码"
+            value={code}
+            onChange={e => setCode(e.target.value)}
+          />
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-500 text-white rounded-xl font-semibold text-base shadow hover:bg-blue-600 transition-all disabled:bg-gray-300"
+            onClick={handleSendCode}
+            disabled={sending || !isValidEmail(email)}
+          >
+            {sending ? "发送中..." : "发送验证码"}
+          </button>
+        </div>
+        {sendMsg && <div className="text-sm text-center text-gray-500">{sendMsg}</div>}
         <input
           className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 p-3 rounded-xl outline-none transition-all text-base"
           placeholder="密码"

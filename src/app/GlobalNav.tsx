@@ -18,8 +18,27 @@ export default function GlobalNav() {
         await fetch(`/api/apikey/auto?userId=${userId}`, { method: "DELETE", credentials: "include" });
       } catch {}
     }
+    localStorage.removeItem("easyprompt_auto_apikey");
     await signOut({ redirect: false });
     window.location.href = "/login";
+  };
+
+  const handleOpenDocs = async () => {
+    // 优先获取最新 isAuto=true 的 apikey
+    let latestApiKey = apiKey;
+    try {
+      const res = await fetch("/api/apikey/auto", { credentials: "include" });
+      const data = await res.json();
+      if (data?.key) {
+        latestApiKey = data.key;
+        localStorage.setItem("easyprompt_apikey", data.key);
+      }
+    } catch {}
+    if (latestApiKey) {
+      window.open(`/docs/index.html?api_key=${latestApiKey}`, "_blank");
+    } else {
+      window.open("/docs/index.html", "_blank");
+    }
   };
 
   if (!showNav) return null;
@@ -41,8 +60,8 @@ export default function GlobalNav() {
           <Link href="/" className="text-gray-600 hover:text-blue-600">首页</Link>
           <Link href="/apikey" className="text-gray-600 hover:text-blue-600">API Key管理</Link>
           <a
-            href={apiKey ? `/docs/index.html?api_key=${apiKey}` : "/docs/index.html"}
-            target="_blank"
+            href="#"
+            onClick={e => { e.preventDefault(); handleOpenDocs(); }}
             className="text-blue-600 hover:text-blue-800"
             rel="noopener noreferrer"
           >API文档</a>

@@ -193,33 +193,33 @@ function HomePageContent() {
   return (
     <>
       <GlobalNav />
-      <div className="flex flex-col h-screen bg-gray-50">
-        <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex flex-1 overflow-hidden">
           {/* 左侧列表骨架 */}
-          <div className="w-1/3 min-w-[280px] max-w-md border-r bg-white">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-bold text-gray-800">提示词列表</h2>
-              <button
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+        <div className="w-1/3 min-w-[280px] max-w-md border-r bg-white">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-bold text-gray-800">提示词列表</h2>
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
                 onClick={startCreate}
               >新建</button>
-            </div>
+          </div>
             <form className="p-4 pb-0 flex gap-2" onSubmit={handleSearch}>
-              <input
-                type="text"
+            <input
+              type="text"
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
-                placeholder="搜索标题或内容..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+              placeholder="搜索标题或内容..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
                 disabled={loading}
-              />
+            />
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
                 disabled={loading}
               >搜索</button>
             </form>
-            <div className="p-4 space-y-2 overflow-y-auto" style={{ height: "calc(100vh - 8rem)" }}>
+          <div className="p-4 space-y-2 overflow-y-auto" style={{ height: "calc(100vh - 8rem)" }}>
               {loading ? (
                 <PromptListSkeleton />
               ) : prompts.length === 0 ? (
@@ -255,16 +255,16 @@ function HomePageContent() {
                     <div className="mt-1 text-sm text-gray-500 line-clamp-2 w-full">{p.content}</div>
                   </div>
                 ))
-              )}
-            </div>
+            )}
           </div>
+        </div>
           {/* 右侧详情骨架 */}
           <div className="flex-1 flex flex-col min-h-0 bg-white">
             {creating ? (
               <div className="pl-12 pr-8 py-10 w-full h-full">
                 <form className="flex flex-col gap-8 w-full h-full max-w-5xl mx-auto p-12 bg-white rounded-3xl shadow-2xl border border-gray-100" style={{ minHeight: '60vh' }} onSubmit={e => { e.preventDefault(); saveCreate(); }}>
                   {formError && <div className="text-red-500 text-base text-center mb-2">{formError}</div>}
-                  <input
+                <input
                     className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 p-4 rounded-xl outline-none transition-all text-2xl font-semibold"
                     placeholder="标题"
                     value={newTitle}
@@ -278,11 +278,11 @@ function HomePageContent() {
                       height={400}
                       preview="edit"
                     />
-                  </div>
+                </div>
                   <div className="flex gap-2 mt-2">
                     <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">保存</button>
                     <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={cancelCreate}>取消</button>
-                  </div>
+              </div>
                 </form>
               </div>
             ) : selectedPrompt ? (
@@ -308,10 +308,10 @@ function HomePageContent() {
                     <div className="flex gap-2 mt-2">
                       <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">保存</button>
                       <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={cancelEdit}>取消</button>
-                    </div>
+                </div>
                   </form>
-                ) : (
-                  <>
+                  ) : (
+                    <>
                     <div className="flex flex-col gap-1 mb-4 sticky top-0 z-10 bg-white pt-2" style={{ paddingRight: 0, minHeight: '64px' }} id="sticky-header">
                       <div className="flex items-center">
                         <div className="text-2xl font-bold text-gray-900 flex-1">{selectedPrompt.title}</div>
@@ -329,7 +329,7 @@ function HomePageContent() {
                           className={`px-3 py-1 text-sm rounded border ${previewMode === 'code' ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold' : 'bg-white text-gray-500 border-gray-200'} hover:bg-blue-100`}
                           onClick={() => setPreviewMode('code')}
                         >源码</button>
-                        <button
+                      <button
                           className={`px-3 py-1 text-sm rounded border ${previewMode === 'preview' ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold' : 'bg-white text-gray-500 border-gray-200'} hover:bg-blue-100`}
                           onClick={() => setPreviewMode('preview')}
                         >预览</button>
@@ -360,20 +360,20 @@ function HomePageContent() {
                         </pre>
                       ) : (
                         <MarkdownPreview source={selectedPrompt.content} className="wmde-markdown" />
-                      )}
-                    </div>
+                  )}
+                </div>
                   </>
                 )}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <div className="text-lg">请选择左侧的提示词查看详情</div>
-                <div className="mt-2">或点击右上角新建提示词</div>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="text-lg">请选择左侧的提示词查看详情</div>
+              <div className="mt-2">或点击右上角新建提示词</div>
+            </div>
+          )}
         </div>
       </div>
+    </div>
     </>
   );
 }

@@ -71,12 +71,12 @@ export async function POST(req: NextRequest) {
 
   const where = {
     ...(q
-      ? {
-          OR: [
+    ? {
+        OR: [
             { title: { contains: q } },
             { content: { contains: q } },
-          ],
-        }
+        ],
+      }
       : {}),
     userId: check.key.userId,
   };

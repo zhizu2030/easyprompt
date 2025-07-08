@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,9 +16,9 @@ model User {
   emailVerified DateTime?
   image         String?
   accounts      Account[]
+  apiKeys       ApiKey[]
   prompts       Prompt[]
   sessions      Session[]
-  apiKeys       ApiKey[]
 }
 
 model Account {
@@ -37,6 +37,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId], map: "Account_userId_fkey")
 }
 
 model Session {
@@ -45,6 +46,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "Session_userId_fkey")
 }
 
 model VerificationToken {
@@ -62,17 +65,31 @@ model Prompt {
   createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "Prompt_userId_fkey")
 }
 
 model ApiKey {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  expiresAt DateTime?
-  enabled   Boolean  @default(true)
-  remark    String?
-  isAuto    Boolean  @default(false)
-  permissions String[] @default([])
+  id          String    @id @default(cuid())
+  key         String    @unique
+  userId      String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  enabled     Boolean   @default(true)
+  remark      String?
+  isAuto      Boolean   @default(false)
+  permissions String    @default("[]")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "ApiKey_userId_fkey")
+}
+
+model EmailCode {
+  id         String   @id @default(cuid())
+  email      String
+  code       String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  used       Boolean  @default(false)
+  @@index([email])
 }
