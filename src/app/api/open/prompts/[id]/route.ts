@@ -4,11 +4,11 @@ import { requireApiKey } from "@/lib/requireApiKey";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const check = await requireApiKey(request);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
-  const { id } = params;
+  const { id } = context.params;
   const prompt = await prisma.prompt.findUnique({
     where: { id },
     select: {
@@ -25,10 +25,10 @@ export async function GET(
   return NextResponse.json(prompt);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
   const check = await requireApiKey(req);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
-  const id = params.id;
+  const id = context.params.id;
   let body: any = {};
   try {
     body = await req.json();
@@ -53,10 +53,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
   const check = await requireApiKey(req);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
-  const id = params.id;
+  const id = context.params.id;
   if (!check.key || !check.key.userId) {
     return NextResponse.json({ error: "API Key 无效或未绑定用户" }, { status: 401 });
   }
