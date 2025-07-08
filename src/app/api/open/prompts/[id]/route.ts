@@ -4,11 +4,11 @@ import { requireApiKey } from "@/lib/requireApiKey";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const check = await requireApiKey(request);
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
-  const { id } = await params;
+  const { id } = params;
   const prompt = await prisma.prompt.findUnique({
     where: { id },
     select: {
