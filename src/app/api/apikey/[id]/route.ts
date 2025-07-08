@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "未登录" }, { status: 401 });
