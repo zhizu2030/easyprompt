@@ -54,6 +54,9 @@ export const authOptions = {
           });
           console.log('[SESSION CALLBACK] found isAuto apikeys:', autoKeys.length);
           if (autoKeys.length === 0) {
+            if (!token.id || typeof token.id !== "string") {
+              throw new Error("无效的用户ID");
+            }
             const newKey = await prisma.apiKey.create({
               data: {
                 key: nanoid(),
