@@ -23,6 +23,7 @@ export const authOptions = {
           where: { name: credentials.username }
         });
         if (!user) throw new Error("用户不存在");
+        if (!user.password) throw new Error("用户未设置密码");
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error("密码错误");
         return { id: user.id, name: user.name, email: user.email };
